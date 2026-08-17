@@ -1,0 +1,45 @@
+L4D2 VR - Y VOCALIZER UNIVERSAL
+
+This addon is designed specifically for the sd805 version of L4D2VR:
+https://github.com/sd805/l4d2vr
+
+Other forks or modified versions of L4D2VR may use a different d3d9.dll and are NOT guaranteed to be compatible.
+
+WHAT IT DOES
+The Y button opens the standard Left 4 Dead 2 radial menu named "Orders".
+
+If you already use a standard vocalizer that replaces the Orders menu:
+- Y opens YOUR installed vocalizer.
+- Your language is preserved.
+- Your own phrases and radial layout are preserved.
+
+If you do not have a vocalizer installed:
+- Y opens the normal Left 4 Dead 2 Orders radial menu.
+
+IMPORTANT
+This Workshop item does NOT replace radialmenu.txt and does NOT install its own vocalizer.
+
+REQUIRED - Y BUTTON CORE PATCH
+Download the Core Patch here:
+https://github.com/Wokgui/L4D2VR-Y-Vocalizer-Universal-Core-Patch/raw/main/L4D2VR_Y_Vocalizer_Universal_Core_Patch_v1.0.zip
+
+Installation:
+1. Install the sd805 version of L4D2VR.
+2. Subscribe to this Workshop item.
+3. Download the Core Patch using the link above.
+4. Extract the ZIP.
+5. Double-click INSTALL_Y_VOCALIZER_UNIVERSAL.bat.
+6. Start SteamVR and launch L4D2VR with -insecure.
+
+The installer automatically detects Left 4 Dead 2 and backs up your existing L4D2VR d3d9.dll.
+
+UNINSTALL
+Run UNINSTALL_Y_VOCALIZER_UNIVERSAL.bat to restore your previous L4D2VR DLL.
+
+COMPATIBILITY
+Designed and tested for the sd805/L4D2VR codebase.
+Standard vocalizers using or replacing the Orders radial should work automatically.
+Vocalizers using completely custom radial names may require additional configuration.
+
+L4D2VR:
+https://github.com/sd805/l4d2vr
