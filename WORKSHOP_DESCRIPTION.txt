@@ -1,58 +1,131 @@
-L4D2 VR - Y VOCALIZER UNIVERSAL
+[h1]L4D2VR – Y BUTTON VOCALIZER SHORTCUT[/h1]
 
-Universal Y-button vocalizer bridge for the sd805 version of L4D2VR.
+Adds a simple Y-button shortcut for your existing Left 4 Dead 2 vocalizer in the current L4D2VR build.
 
-SUPPORTED L4D2VR VERSION
-This patch is designed specifically for:
-https://github.com/sd805/l4d2vr
+[h2]CURRENT VERSION[/h2]
 
-It was built for the sd805/L4D2VR codebase currently based on commit:
-628820257ae755ae120b8f86740a145b6fb74f51
+Designed for the current L4D2VR project by keyou:
 
-Other forks or modified L4D2VR builds may use a different d3d9.dll and are NOT guaranteed to be compatible.
+https://github.com/keyou91/l4d2vr
 
-WHAT IT DOES
-The Y button opens the standard Left 4 Dead 2 radial menu named "Orders".
+This replaces the old sd805-specific Core Patch.
 
-If you already use a standard vocalizer that replaces the Orders menu:
-- Y opens YOUR installed vocalizer.
-- Your language is preserved.
-- Your own phrases and radial layout are preserved.
+[h2]WHAT IT DOES[/h2]
 
-If you do not have a vocalizer installed:
-- Y opens the normal Left 4 Dead 2 Orders radial menu.
+The current L4D2VR already supports configurable Custom Actions and held keyboard-key mappings.
 
-This Workshop item does NOT replace radialmenu.txt and does NOT install its own vocalizer.
+This patch uses that native system to make the Quest/Oculus Touch [b]Y button behave like Ctrl[/b].
 
-REQUIRED - Y BUTTON CORE PATCH
-Download the Core Patch here:
-https://github.com/Wokgui/L4D2VR-Y-Vocalizer-Universal-Core-Patch/raw/main/L4D2VR_Y_Vocalizer_Universal_Core_Patch_v1.0.zip
+If Ctrl already opens your vocalizer:
 
-INSTALLATION
-1. Install the sd805 version of L4D2VR.
-2. Subscribe to this Workshop item.
-3. Download the Core Patch using the link above.
-4. Extract the ZIP.
-5. Close Left 4 Dead 2 if it is running.
-6. Double-click INSTALL_Y_VOCALIZER_UNIVERSAL.bat.
-7. Start SteamVR and launch L4D2VR with -insecure.
+[list]
+[*] Hold Y → opens the same vocalizer.
+[*] Use your normal VR pointing/shooting method to select a phrase.
+[*] Release Y → releases Ctrl.
+[/list]
 
-The installer automatically detects Left 4 Dead 2 and backs up your existing L4D2VR d3d9.dll before replacing it.
+[h2]IMPORTANT – NORMAL CONTROLS ARE NOT MODIFIED[/h2]
 
-UNINSTALL
-Run UNINSTALL_Y_VOCALIZER_UNIVERSAL.bat.
-The installer backup will be restored automatically.
+This v2.0 patch does [b]not[/b]:
 
-COMPATIBILITY
-- Designed for sd805/L4D2VR.
-- Designed for standard L4D2 vocalizers that use or replace the Orders radial.
-- Standard vocalizers keep their own language, phrases and layout.
-- If no vocalizer is installed, the native L4D2 Orders menu is used.
-- Vocalizers using completely custom radial names may require additional configuration.
-- Other L4D2VR forks are not guaranteed to work.
+[list]
+[*] modify d3d9.dll;
+[*] patch L4D2VR C++ code;
+[*] replace radialmenu.txt;
+[*] install its own vocalizer;
+[*] use either thumbstick to navigate the vocalizer;
+[*] modify movement or turning;
+[*] modify trigger bindings;
+[*] add a custom VR overlay/pointer system.
+[/list]
 
-L4D2VR project:
-https://github.com/sd805/l4d2vr
+The goal is deliberately simple: [b]Y is only a shortcut for the Ctrl key you already use for your vocalizer.[/b]
 
-Core Patch repository:
+[h2]REQUIREMENTS[/h2]
+
+[list]
+[*] Left 4 Dead 2
+[*] Current keyou91/L4D2VR
+[*] Oculus / Meta Quest Touch-style controllers
+[*] A vocalizer already configured to open with Ctrl
+[/list]
+
+Current L4D2VR:
+https://github.com/keyou91/l4d2vr
+
+[h2]DOWNLOAD[/h2]
+
+Download v2.0 here:
+
+https://github.com/Wokgui/L4D2VR-Y-Vocalizer-Universal-Core-Patch/raw/main/L4D2VR_Y_Vocalizer_Current_v2.0.zip
+
+Repository:
+
 https://github.com/Wokgui/L4D2VR-Y-Vocalizer-Universal-Core-Patch
+
+[h2]INSTALLATION[/h2]
+
+[list=1]
+[*] Install the current keyou91/L4D2VR build.
+[*] Check that Ctrl already opens your vocalizer.
+[*] Close Left 4 Dead 2.
+[*] Close SteamVR.
+[*] Download and extract the v2.0 ZIP.
+[*] Run [b]INSTALL_Y_VOCALIZER_CURRENT.bat[/b].
+[*] Restart SteamVR.
+[*] Launch L4D2VR.
+[/list]
+
+The installer automatically detects Left 4 Dead 2 and backs up the L4D2VR files it changes.
+
+[h2]HOW IT WORKS[/h2]
+
+The installer uses a free L4D2VR CustomAction and configures it as:
+
+[code]hold:key:ctrl[/code]
+
+It then remaps only the physical Y button on Oculus/Quest Touch controllers to that CustomAction.
+
+No gameplay-input code is replaced.
+
+[h2]CONTROLS[/h2]
+
+[b]Hold Y[/b]
+Opens exactly the same vocalizer as Ctrl.
+
+[b]Point / shoot[/b]
+Use the same VR method you already use when the vocalizer is opened with Ctrl.
+
+[b]Release Y[/b]
+Releases Ctrl.
+
+[b]Thumbsticks[/b]
+Normal L4D2VR movement/turning. They are not used by this patch.
+
+[h2]UNINSTALL[/h2]
+
+Close L4D2 and SteamVR, then run:
+
+[b]UNINSTALL_Y_VOCALIZER_CURRENT.bat[/b]
+
+The original L4D2VR configuration and Oculus Touch binding are restored.
+
+[h2]IF Y STILL OPENS PAUSE[/h2]
+
+SteamVR may be using an old personal controller binding.
+
+Reset the L4D2VR controller binding to the current/default binding, restart SteamVR and test again.
+
+[h2]LEGACY NOTICE[/h2]
+
+The old v1.0 package was made for the previous sd805/L4D2VR codebase.
+
+[b]Do not install the old sd805 Core Patch over the current keyou91/L4D2VR build.[/b]
+
+[h2]CREDITS[/h2]
+
+L4D2VR:
+https://github.com/keyou91/l4d2vr
+
+Y Vocalizer Shortcut:
+Wokgui / ChatGPT
