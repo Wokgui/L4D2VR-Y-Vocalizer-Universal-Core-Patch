@@ -119,9 +119,9 @@ Do not install the old v1.0 Core Patch over the current keyou91/L4D2VR build.
 
 ## Source / transparency
 
-The installer source files are included in this repository under `installer/`.
+The v2.0 ZIP contains the plain-text PowerShell and BAT installer/uninstaller scripts, so the changes can be inspected before running them.
 
-The v2.0 package changes only:
+The package changes only:
 
 - `VR\config.txt`
 - `VR\SteamVRActionManifest\bindings_oculus_touch.json`
