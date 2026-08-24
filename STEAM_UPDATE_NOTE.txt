@@ -1,0 +1,16 @@
+MAJOR UPDATE — v2.0
+
+Reworked for the current keyou91/L4D2VR build.
+
+- No more d3d9.dll replacement.
+- No more C++ patching.
+- No thumbstick vocalizer controls.
+- No custom radialmenu.txt.
+- No custom VR overlay/pointer mode.
+- Y now uses L4D2VR's native CustomAction system to behave like Ctrl.
+- Movement, turning and triggers remain untouched.
+- Existing Ctrl vocalizer behavior is preserved.
+- Automatic backup and uninstall restore added.
+
+IMPORTANT:
+The old sd805 v1.0 Core Patch is obsolete and should not be installed over the current L4D2VR build.
