@@ -1,0 +1,8 @@
+"AddonInfo"
+{
+    "addonSteamAppID"        "550"
+    "addontitle"             "L4D2VR - Y Button Vocalizer Shortcut"
+    "addonversion"           "2.0"
+    "addonauthor"            "Wokgui / ChatGPT"
+    "addonDescription"       "Workshop companion page for the current L4D2VR Y-button vocalizer shortcut. Does not replace radialmenu.txt."
+}
