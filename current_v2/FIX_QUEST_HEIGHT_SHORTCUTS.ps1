@@ -34,10 +34,15 @@ function Ensure-Admin {
 
     Write-Info "Elevation administrateur requise pour pouvoir corriger OVR Advanced Settings."
 
+    $scriptPath = $PSCommandPath
+    if (-not $scriptPath) {
+        throw "Impossible de retrouver le chemin du script pour l'elevation administrateur."
+    }
+
     $args = @(
         "-NoProfile",
         "-ExecutionPolicy", "Bypass",
-        "-File", ('"' + $MyInvocation.MyCommand.Path + '"')
+        "-File", ('"' + $scriptPath + '"')
     )
     if ($GameDir) {
         $args += @("-GameDir", ('"' + $GameDir + '"'))
@@ -184,7 +189,6 @@ function Patch-OvrasBindingFile {
         return $false
     }
 
-    $json = $null
     try {
         $json = $raw | ConvertFrom-Json
     } catch {
@@ -231,7 +235,7 @@ function Patch-OvrasBindingFile {
 }
 
 function Find-And-Patch-Ovras {
-    $patched = New-Object System.Collections.Generic.HashSet[string]([System.StringComparer]::OrdinalIgnoreCase)
+    $patched = New-Object System.Collections.Generic.List[string]
     $candidates = New-Object System.Collections.Generic.List[string]
 
     try {
@@ -249,14 +253,17 @@ function Find-And-Patch-Ovras {
         "${env:ProgramFiles(x86)}\OpenVR-AdvancedSettings"
     )) {
         if ($installDir) {
-            $candidates.Add((Join-Path $installDir "default_action_manifests\ovras-team.advancedsettings_default_touch.json"))
+            $candidate = Join-Path $installDir "default_action_manifests\ovras-team.advancedsettings_default_touch.json"
+            if (-not $candidates.Contains($candidate)) {
+                $candidates.Add($candidate)
+            }
         }
     }
 
     foreach ($path in $candidates) {
-        if (Test-Path -LiteralPath $path) {
-            if (Patch-OvrasBindingFile -Path $path) {
-                [void]$patched.Add($path)
+        if ((Test-Path -LiteralPath $path) -and (Patch-OvrasBindingFile -Path $path)) {
+            if (-not $patched.Contains($path)) {
+                $patched.Add($path)
             }
         }
     }
@@ -273,22 +280,23 @@ function Find-And-Patch-Ovras {
 
     foreach ($steamPath in Get-SteamPaths) {
         $configRoot = Join-Path $steamPath "config"
-        if (Test-Path -LiteralPath $configRoot -and -not $searchRoots.Contains($configRoot)) {
+        if ((Test-Path -LiteralPath $configRoot) -and -not $searchRoots.Contains($configRoot)) {
             $searchRoots.Add($configRoot)
         }
     }
 
     foreach ($root in $searchRoots) {
-        Get-ChildItem -LiteralPath $root -Filter "*.json" -File -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
-            $path = $_.FullName
+        $jsonFiles = Get-ChildItem -LiteralPath $root -Filter "*.json" -File -Recurse -ErrorAction SilentlyContinue
+        foreach ($file in $jsonFiles) {
+            $path = $file.FullName
             if ($patched.Contains($path)) {
-                return
+                continue
             }
 
             $raw = Get-Content -LiteralPath $path -Raw -ErrorAction SilentlyContinue
             if ($raw -and $raw -match 'steam\.overlay\.1009850' -and $raw -match 'oculus_touch') {
                 if (Patch-OvrasBindingFile -Path $path) {
-                    [void]$patched.Add($path)
+                    $patched.Add($path)
                 }
             }
         }
