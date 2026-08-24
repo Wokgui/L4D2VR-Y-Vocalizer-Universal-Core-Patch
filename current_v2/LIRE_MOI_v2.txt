@@ -1,0 +1,57 @@
+L4D2VR - Y VOCALIZER SHORTCUT v2.0
+=====================================
+
+Cette version est faite pour le L4D2VR actuel de keyou.
+
+Principe
+--------
+Le patch ne modifie PLUS d3d9.dll et ne touche PLUS au code C++ de L4D2VR.
+
+Le L4D2VR actuel possede nativement des CustomAction et sait maintenir une
+touche clavier virtuelle. L'installateur utilise cette fonction native :
+
+    CustomActionXCommand=hold:key:ctrl
+
+Puis il relie uniquement le bouton Y du controleur Quest/Oculus a ce
+CustomAction.
+
+Consequence :
+- Y se comporte exactement comme ta touche CTRL.
+- Si CTRL ouvre deja ton vocalizer, Y ouvre exactement le meme vocalizer.
+- Tu peux viser/tirer sur une phrase exactement comme avec CTRL.
+- Les sticks ne sont pas modifies.
+- La gachette droite reste PrimaryAttack.
+- Aucun pointeur ou overlay VR personnalise n'est ajoute.
+- Aucun radialmenu.txt n'est remplace.
+- Aucun d3d9.dll n'est remplace.
+
+Installation
+------------
+1. Installe d'abord le L4D2VR actuel de keyou.
+2. Verifie que CTRL ouvre deja ton vocalizer.
+3. Ferme Left 4 Dead 2 et SteamVR.
+4. Lance INSTALL_Y_VOCALIZER_CURRENT.bat.
+5. Redemarre SteamVR puis L4D2.
+
+Utilisation
+-----------
+- Maintiens Y pour faire exactement comme CTRL.
+- Vise/tire sur la phrase voulue.
+- Relache Y pour relacher CTRL.
+
+Desinstallation
+---------------
+Ferme L4D2 et SteamVR puis lance UNINSTALL_Y_VOCALIZER_CURRENT.bat.
+
+L'installateur conserve une sauvegarde exacte de config.txt et du binding
+Oculus/Quest d'origine dans VR\Wokgui_Y_Vocalizer_Backup_v2.
+
+Depannage
+---------
+Si Y continue d'ouvrir Pause :
+SteamVR > L4D2VR > Controller bindings > remettre le binding sur Default.
+
+Si Y ne fait rien :
+verifie d'abord que CTRL ouvre effectivement ton vocalizer hors VR ou dans
+ta configuration actuelle. La v2.0 reproduit volontairement CTRL au lieu de
+modifier le systeme de menus VR.
