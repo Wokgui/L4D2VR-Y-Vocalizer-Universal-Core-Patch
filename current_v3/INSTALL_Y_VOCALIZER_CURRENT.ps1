@@ -62,8 +62,8 @@ function Find-L4D2 {
         throw "Left 4 Dead 2 introuvable dans : $candidate"
     }
 
-    $here = Split-Path -Parent $MyInvocation.MyCommand.Path
-    if (Test-Path -LiteralPath (Join-Path $here "left4dead2.exe")) {
+    $here = $PSScriptRoot
+    if (-not [string]::IsNullOrWhiteSpace($here) -and (Test-Path -LiteralPath (Join-Path $here "left4dead2.exe"))) {
         return $here
     }
 
