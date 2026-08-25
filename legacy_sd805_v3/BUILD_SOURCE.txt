@@ -1,0 +1,4 @@
+Built from sd805/l4d2vr commit 628820257ae755ae120b8f86740a145b6fb74f51.
+Input change in VR::ProcessInput:
+Y/Pause held -> +mouse_menu Orders
+Y/Pause released -> -mouse_menu Orders
