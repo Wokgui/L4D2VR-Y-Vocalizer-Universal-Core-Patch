@@ -49,7 +49,7 @@ function Find-L4D2([string]$Requested) {
 }
 
 Write-Host ""
-Write-Host "L4D2VR sd805 - Y Vocalizer + sans recentrage v3.3" -ForegroundColor White
+Write-Host "L4D2VR sd805 - Y Vocalizer + sans recentrage v3.4" -ForegroundColor White
 Write-Host "Y press = open Orders / Y release = close Orders" -ForegroundColor DarkGray
 Write-Host ""
 
@@ -74,9 +74,10 @@ foreach ($required in @($manifestPath,$bindingsPath,$currentDll,$payloadDll,$pay
 }
 
 $payloadBindingsText = Get-Content -LiteralPath $payloadBindings -Raw
-if ($payloadBindingsText -notmatch [regex]::Escape('/actions/orders/in/Hold') -or
-    $payloadBindingsText -match [regex]::Escape('/actions/main/in/ResetPosition')) {
-    throw "Le binding du paquet n'est pas la version fusionnee Y + sans recentrage. Aucun fichier n'a ete modifie."
+if ($payloadBindingsText -notmatch [regex]::Escape('/actions/main/in/OrdersMenu') -or
+    $payloadBindingsText -match [regex]::Escape('/actions/main/in/ResetPosition') -or
+    $payloadBindingsText -match [regex]::Escape('/actions/orders/in/Hold')) {
+    throw "Le binding du paquet n'est pas la version corrigee Y + sans recentrage. Aucun fichier n'a ete modifie."
 }
 
 $manifest = Get-Content -LiteralPath $manifestPath -Raw
@@ -118,9 +119,10 @@ Write-Host ""
 Write-Host "Installation terminee." -ForegroundColor Green
 Write-Host "- Appuie sur Y : le vocalizer Orders s'ouvre." -ForegroundColor Gray
 Write-Host "- Maintiens Y : il reste ouvert." -ForegroundColor Gray
+Write-Host "- Utilise le controleur droit pour choisir dans le vocalizer comme avant." -ForegroundColor Gray
 Write-Host "- Relache Y : il se ferme immediatement." -ForegroundColor Gray
 Write-Host "- Clic stick gauche : aucun recentrage." -ForegroundColor Gray
-Write-Host "- Marche, Pause et les autres controles VR restent inchanges." -ForegroundColor Gray
+Write-Host "- Mouvement du stick gauche et controles du controleur droit conserves." -ForegroundColor Gray
 Write-Host ""
 Write-Host "Redemarre SteamVR avant de lancer L4D2VR." -ForegroundColor Yellow
 if (-not $Quiet) { Read-Host "Appuie sur Entree pour fermer" }
