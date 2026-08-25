@@ -1,4 +1,7 @@
-param([string]$GameDir = "")
+param(
+    [string]$GameDir = "",
+    [switch]$Quiet
+)
 
 $ErrorActionPreference = "Stop"
 $BackupFolderName = "Wokgui_Y_Vocalizer_Backup_sd805_v3"
@@ -63,8 +66,10 @@ $manifestPath = Join-Path $GameDir "VR\SteamVRActionManifest\action_manifest.jso
 $bindingsPath = Join-Path $GameDir "VR\SteamVRActionManifest\bindings_oculus_touch.json"
 $currentDll = Join-Path $GameDir "d3d9.dll"
 $payloadDll = Join-Path $PSScriptRoot "payload\d3d9.dll"
+$payloadManifest = Join-Path $PSScriptRoot "payload\VR\SteamVRActionManifest\action_manifest.json"
+$payloadBindings = Join-Path $PSScriptRoot "payload\VR\SteamVRActionManifest\bindings_oculus_touch.json"
 
-foreach ($required in @($manifestPath,$bindingsPath,$currentDll,$payloadDll)) {
+foreach ($required in @($manifestPath,$bindingsPath,$currentDll,$payloadDll,$payloadManifest,$payloadBindings)) {
     if (-not (Test-Path -LiteralPath $required)) { throw "Fichier requis introuvable : $required" }
 }
 
@@ -75,22 +80,40 @@ if ($manifest -notmatch [regex]::Escape('/actions/main/in/Pause') -or $bindings 
 }
 
 $backupDir = Join-Path $GameDir "VR\$BackupFolderName"
+$backupDll = Join-Path $backupDir "d3d9.dll.original"
+$backupManifest = Join-Path $backupDir "action_manifest.json.original"
+$backupBindings = Join-Path $backupDir "bindings_oculus_touch.json.original"
 if (-not (Test-Path -LiteralPath $backupDir)) {
     New-Item -ItemType Directory -Path $backupDir | Out-Null
-    Copy-Item -LiteralPath $currentDll -Destination (Join-Path $backupDir "d3d9.dll.original") -Force
+    Copy-Item -LiteralPath $currentDll -Destination $backupDll -Force
+    Copy-Item -LiteralPath $manifestPath -Destination $backupManifest -Force
+    Copy-Item -LiteralPath $bindingsPath -Destination $backupBindings -Force
     Write-Host "Sauvegarde creee : $backupDir" -ForegroundColor Green
 } else {
+    foreach ($required in @($backupDll,$backupManifest,$backupBindings)) {
+        if (-not (Test-Path -LiteralPath $required)) { throw "Sauvegarde existante incomplete : $required. Aucun fichier n'a ete modifie." }
+    }
     Write-Host "Sauvegarde existante conservee : $backupDir" -ForegroundColor Yellow
 }
 
-Copy-Item -LiteralPath $payloadDll -Destination $currentDll -Force
+try {
+    Copy-Item -LiteralPath $payloadDll -Destination $currentDll -Force
+    Copy-Item -LiteralPath $payloadManifest -Destination $manifestPath -Force
+    Copy-Item -LiteralPath $payloadBindings -Destination $bindingsPath -Force
+} catch {
+    Write-Host "Copie incomplete : restauration automatique..." -ForegroundColor Red
+    Copy-Item -LiteralPath $backupDll -Destination $currentDll -Force -ErrorAction SilentlyContinue
+    Copy-Item -LiteralPath $backupManifest -Destination $manifestPath -Force -ErrorAction SilentlyContinue
+    Copy-Item -LiteralPath $backupBindings -Destination $bindingsPath -Force -ErrorAction SilentlyContinue
+    throw
+}
 
 Write-Host ""
 Write-Host "Installation terminee." -ForegroundColor Green
 Write-Host "- Appuie sur Y : le vocalizer Orders s'ouvre." -ForegroundColor Gray
 Write-Host "- Maintiens Y : il reste ouvert." -ForegroundColor Gray
 Write-Host "- Relache Y : il se ferme immediatement." -ForegroundColor Gray
-Write-Host "- Aucun CustomAction n'est necessaire sur cette version sd805." -ForegroundColor Gray
+Write-Host "- Pause et les autres controles VR restent inchanges." -ForegroundColor Gray
 Write-Host ""
 Write-Host "Redemarre SteamVR avant de lancer L4D2VR." -ForegroundColor Yellow
-Read-Host "Appuie sur Entree pour fermer"
+if (-not $Quiet) { Read-Host "Appuie sur Entree pour fermer" }

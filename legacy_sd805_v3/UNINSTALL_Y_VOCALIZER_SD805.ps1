@@ -1,4 +1,7 @@
-param([string]$GameDir = "")
+param(
+    [string]$GameDir = "",
+    [switch]$Quiet
+)
 
 $ErrorActionPreference = "Stop"
 $BackupFolderName = "Wokgui_Y_Vocalizer_Backup_sd805_v3"
@@ -52,13 +55,21 @@ foreach ($name in @("left4dead2","vrserver","vrmonitor")) {
 $GameDir = Find-L4D2 $GameDir
 $backupDir = Join-Path $GameDir "VR\$BackupFolderName"
 $backupDll = Join-Path $backupDir "d3d9.dll.original"
+$backupManifest = Join-Path $backupDir "action_manifest.json.original"
+$backupBindings = Join-Path $backupDir "bindings_oculus_touch.json.original"
 $currentDll = Join-Path $GameDir "d3d9.dll"
+$manifestPath = Join-Path $GameDir "VR\SteamVRActionManifest\action_manifest.json"
+$bindingsPath = Join-Path $GameDir "VR\SteamVRActionManifest\bindings_oculus_touch.json"
 
-if (-not (Test-Path -LiteralPath $backupDll)) { throw "Sauvegarde sd805 v3 introuvable. Aucun fichier n'a ete modifie." }
+foreach ($required in @($backupDll,$backupManifest,$backupBindings)) {
+    if (-not (Test-Path -LiteralPath $required)) { throw "Sauvegarde sd805 v3 incomplete. Aucun fichier n'a ete modifie." }
+}
 Copy-Item -LiteralPath $backupDll -Destination $currentDll -Force
-Remove-Item -LiteralPath $backupDir -Recurse -Force
+Copy-Item -LiteralPath $backupManifest -Destination $manifestPath -Force
+Copy-Item -LiteralPath $backupBindings -Destination $bindingsPath -Force
 
 Write-Host ""
-Write-Host "Ancien d3d9.dll restaure." -ForegroundColor Green
+Write-Host "DLL, manifeste et binding Oculus d'origine restaures." -ForegroundColor Green
+Write-Host "La sauvegarde est conservee : $backupDir" -ForegroundColor Cyan
 Write-Host "Redemarre SteamVR avant de rejouer." -ForegroundColor Yellow
-Read-Host "Appuie sur Entree pour fermer"
+if (-not $Quiet) { Read-Host "Appuie sur Entree pour fermer" }

@@ -1,0 +1,132 @@
+diff --git a/L4D2VR/SteamVRActionManifest/action_manifest.json b/L4D2VR/SteamVRActionManifest/action_manifest.json
+index 3b3b5d5..edf3a79 100644
+--- a/L4D2VR/SteamVRActionManifest/action_manifest.json
++++ b/L4D2VR/SteamVRActionManifest/action_manifest.json
+@@ -134,6 +134,11 @@
+ 		{
+ 			"name": "/actions/main/in/Pause",
+ 			"type": "boolean"
++		},
++		{
++			"name": "/actions/main/in/OrdersMenu",
++			"type": "boolean",
++			"requirement": "optional"
+ 		}
+ 	],
+ 
+@@ -174,7 +179,8 @@
+ 			"/actions/main/in/Spray" : "Spray",
+ 			"/actions/main/in/Scoreboard" : "Show Scoreboard",
+ 			"/actions/main/in/ShowHUD" : "Show HUD",
+-			"/actions/main/in/Pause" : "Pause"
++			"/actions/main/in/Pause" : "Pause",
++			"/actions/main/in/OrdersMenu" : "Orders Menu"
+ 		}
+ 	]
+ }
+diff --git a/L4D2VR/SteamVRActionManifest/bindings_oculus_touch.json b/L4D2VR/SteamVRActionManifest/bindings_oculus_touch.json
+index ca68418..2048949 100644
+--- a/L4D2VR/SteamVRActionManifest/bindings_oculus_touch.json
++++ b/L4D2VR/SteamVRActionManifest/bindings_oculus_touch.json
+@@ -189,7 +189,7 @@
+ 			{
+                "inputs" : {
+                   "click" : {
+-                     "output" : "/actions/main/in/Pause"
++                     "output" : "/actions/main/in/OrdersMenu"
+                   }
+                },
+                "mode" : "button",
+diff --git a/L4D2VR/vr.cpp b/L4D2VR/vr.cpp
+index bb53309..9a28f0f 100644
+--- a/L4D2VR/vr.cpp
++++ b/L4D2VR/vr.cpp
+@@ -135,6 +135,7 @@ int VR::SetActionManifest(const char *fileName)
+     m_Input->GetActionHandle("/actions/main/in/Scoreboard", &m_Scoreboard);
+     m_Input->GetActionHandle("/actions/main/in/ShowHUD", &m_ShowHUD);
+     m_Input->GetActionHandle("/actions/main/in/Pause", &m_Pause);
++    m_Input->GetActionHandle("/actions/main/in/OrdersMenu", &m_OrdersMenu);
+ 
+     m_Input->GetActionSetHandle("/actions/main", &m_ActionSet);
+     m_ActiveActionSet = {};
+@@ -178,6 +179,8 @@ void VR::Update()
+         ProcessMenuInput();
+     else
+         ProcessInput();
++
++    ProcessOrdersMenuInput();
+ }
+ 
+ void VR::CreateVRTextures()
+@@ -401,6 +404,43 @@ bool VR::PressedDigitalAction(vr::VRActionHandle_t &actionHandle, bool checkIfAc
+     return false;
+ }
+ 
++void VR::ProcessOrdersMenuInput()
++{
++    if (!m_Game->m_EngineClient->IsInGame())
++    {
++        if (m_OrdersMenuOpen)
++        {
++            m_Game->ClientCmd_Unrestricted("-mouse_menu Orders");
++            m_OrdersMenuOpen = false;
++        }
++        return;
++    }
++
++    vr::InputDigitalActionData_t actionData = {};
++    const vr::EVRInputError result = m_Input->GetDigitalActionData(
++        m_OrdersMenu,
++        &actionData,
++        sizeof(actionData),
++        vr::k_ulInvalidInputValueHandle);
++
++    // SteamVR can temporarily make an action unavailable while an overlay is
++    // handling input. That is not a physical button release, so keep the menu
++    // state unchanged until an active press/release transition is reported.
++    if (result != vr::VRInputError_None || !actionData.bActive || !actionData.bChanged)
++        return;
++
++    if (actionData.bState && !m_OrdersMenuOpen)
++    {
++        m_Game->ClientCmd_Unrestricted("+mouse_menu Orders");
++        m_OrdersMenuOpen = true;
++    }
++    else if (!actionData.bState && m_OrdersMenuOpen)
++    {
++        m_Game->ClientCmd_Unrestricted("-mouse_menu Orders");
++        m_OrdersMenuOpen = false;
++    }
++}
++
+ bool VR::GetAnalogActionData(vr::VRActionHandle_t &actionHandle, vr::InputAnalogActionData_t &analogDataOut)
+ {
+     vr::EVRInputError result = m_Input->GetAnalogActionData(actionHandle, &analogDataOut, sizeof(analogDataOut), vr::k_ulInvalidInputValueHandle);
+diff --git a/L4D2VR/vr.h b/L4D2VR/vr.h
+index 11c8fea..1340dab 100644
+--- a/L4D2VR/vr.h
++++ b/L4D2VR/vr.h
+@@ -164,6 +164,7 @@ public:
+ 	vr::VRActionHandle_t m_Scoreboard;
+ 	vr::VRActionHandle_t m_ShowHUD;
+ 	vr::VRActionHandle_t m_Pause;
++	vr::VRActionHandle_t m_OrdersMenu;
+ 
+ 	TrackedDevicePoseData m_HmdPose;
+ 	TrackedDevicePoseData m_LeftControllerPose;
+@@ -182,6 +183,7 @@ public:
+ 	float m_HudDistance = 1.3;
+ 	float m_HudSize = 1.1;
+ 	bool m_HudAlwaysVisible = false;
++	bool m_OrdersMenuOpen = false;
+ 
+ 	VR() {};
+ 	VR(Game *game);
+@@ -196,6 +198,7 @@ public:
+ 	void GetViewParameters();
+ 	void ProcessMenuInput();
+ 	void ProcessInput();
++	void ProcessOrdersMenuInput();
+ 	VMatrix VMatrixFromHmdMatrix(const vr::HmdMatrix34_t &hmdMat);
+ 	vr::HmdMatrix34_t VMatrixToHmdMatrix(const VMatrix &vMat);
+ 	vr::HmdMatrix34_t GetControllerTipMatrix(vr::ETrackedControllerRole controllerRole);

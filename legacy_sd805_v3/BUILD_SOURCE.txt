@@ -1,4 +1,10 @@
-Built from sd805/l4d2vr commit 628820257ae755ae120b8f86740a145b6fb74f51.
-Input change in VR::ProcessInput:
-Y/Pause held -> +mouse_menu Orders
-Y/Pause released -> -mouse_menu Orders
+Base source: sd805/l4d2vr commit 628820257ae755ae120b8f86740a145b6fb74f51.
+Build: Release x86, MSVC v143.
+MinHook source: TsudaKageyu/minhook commit 9fbd087432700d73fc571118d6a9697a36443d88, rebuilt as Release Win32 with v143.
+
+Narrow input change:
+- Oculus Touch / Quest Y -> dedicated /actions/main/in/OrdersMenu action.
+- Rising edge -> +mouse_menu Orders.
+- Falling edge -> -mouse_menu Orders.
+- Inactive, error and unchanged SteamVR frames are ignored.
+- Pause and non-Oculus controller profiles are unchanged.
