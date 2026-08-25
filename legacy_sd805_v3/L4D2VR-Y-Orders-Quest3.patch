@@ -78,7 +78,7 @@ index bb53309..9a28f0f 100644
 +    {
 +        if (m_OrdersMenuOpen)
 +        {
-+            m_Game->ClientCmd_Unrestricted("-mouse_menu Orders");
++            m_Game->ClientCmd_Unrestricted("-mouse_menu");
 +            m_OrdersMenuOpen = false;
 +            m_OrdersMenuRawTracking = false;
 +        }
@@ -93,11 +93,11 @@ index bb53309..9a28f0f 100644
 +        bool yPressed = true;
 +        if (GetOculusTouchYState(yPressed) && !yPressed)
 +        {
-+            m_Game->ClientCmd_Unrestricted("-mouse_menu Orders");
++            m_Game->ClientCmd_Unrestricted("-mouse_menu");
 +            m_OrdersMenuOpen = false;
 +            m_OrdersMenuRawTracking = false;
++            return;
 +        }
-+        return;
 +    }
 +
 +    vr::InputDigitalActionData_t actionData = {};
@@ -122,7 +122,7 @@ index bb53309..9a28f0f 100644
 +    }
 +    else if (!actionData.bState && m_OrdersMenuOpen)
 +    {
-+        m_Game->ClientCmd_Unrestricted("-mouse_menu Orders");
++        m_Game->ClientCmd_Unrestricted("-mouse_menu");
 +        m_OrdersMenuOpen = false;
 +        m_OrdersMenuRawTracking = false;
 +    }

@@ -49,7 +49,7 @@ function Find-L4D2([string]$Requested) {
 }
 
 Write-Host ""
-Write-Host "L4D2VR sd805 - Y Vocalizer + sans recentrage v3.1" -ForegroundColor White
+Write-Host "L4D2VR sd805 - Y Vocalizer + sans recentrage v3.2" -ForegroundColor White
 Write-Host "Y press = open Orders / Y release = close Orders" -ForegroundColor DarkGray
 Write-Host ""
 

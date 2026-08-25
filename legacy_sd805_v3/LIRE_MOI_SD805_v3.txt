@@ -1,4 +1,4 @@
-L4D2VR sd805 - Y VOCALIZER + SANS RECENTRAGE v3.1
+L4D2VR sd805 - Y VOCALIZER + SANS RECENTRAGE v3.2
 ===================================================
 
 Cette version est faite pour l'ancien L4D2VR sd805 v0.6.2, commit
@@ -8,7 +8,7 @@ Elle n'utilise pas les CustomAction des versions keyou91 recentes.
 Fonctionnement :
 - appui sur Y : +mouse_menu Orders est envoye une seule fois ;
 - Y maintenu : le vocalizer reste ouvert sans repeter la commande ;
-- relachement de Y : -mouse_menu Orders est envoye une seule fois, donc fermeture immediate ;
+- relachement de Y : la commande native -mouse_menu, sans argument, est envoyee une seule fois ;
 - si le menu radial masque le relachement SteamVR, l'etat physique de Y ferme quand meme le menu ;
 - clic du stick gauche : aucun recentrage ; le mouvement du stick reste normal.
 
