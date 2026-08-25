@@ -136,7 +136,7 @@
 			"type": "boolean"
 		},
 		{
-			"name": "/actions/orders/in/Hold",
+			"name": "/actions/main/in/OrdersMenu",
 			"type": "boolean",
 			"requirement": "optional"
 		}
@@ -149,10 +149,6 @@
 		},
 		{
 		  "name": "/actions/base",
-		  "usage": "hidden"
-		},
-		{
-		  "name": "/actions/orders",
 		  "usage": "hidden"
 		}
 	],
@@ -184,8 +180,7 @@
 			"/actions/main/in/Scoreboard" : "Show Scoreboard",
 			"/actions/main/in/ShowHUD" : "Show HUD",
 			"/actions/main/in/Pause" : "Pause",
-			"/actions/orders" : "Orders Hold",
-			"/actions/orders/in/Hold" : "Orders Hold"
+			"/actions/main/in/OrdersMenu" : "Orders Menu"
 		}
 	]
 }
