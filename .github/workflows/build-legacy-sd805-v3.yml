@@ -1,0 +1,101 @@
+name: Build legacy sd805 Y release fix
+
+on:
+  push:
+    branches:
+      - legacy-sd805-y-release-fix
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout patch repository
+        uses: actions/checkout@v4
+        with:
+          ref: legacy-sd805-y-release-fix
+
+      - name: Clone exact sd805 L4D2VR source
+        shell: pwsh
+        run: |
+          git clone https://github.com/sd805/l4d2vr.git legacy_src
+          Set-Location legacy_src
+          git checkout 628820257ae755ae120b8f86740a145b6fb74f51
+          git submodule update --init --recursive
+
+      - name: Patch Y press and release behavior
+        shell: pwsh
+        run: |
+          $path = 'legacy_src/L4D2VR/vr.cpp'
+          $text = Get-Content -LiteralPath $path -Raw
+          $old = @'
+    if (PressedDigitalAction(m_Pause, true))
+    {
+        m_Game->ClientCmd_Unrestricted("gameui_activate");
+        RepositionOverlays();
+    }
+'@
+          $new = @'
+    if (PressedDigitalAction(m_Pause))
+    {
+        m_Game->ClientCmd_Unrestricted("+mouse_menu Orders");
+    }
+    else
+    {
+        m_Game->ClientCmd_Unrestricted("-mouse_menu Orders");
+    }
+'@
+          if (-not $text.Contains($old)) {
+            throw 'Expected sd805 Pause block not found; refusing to build an unverified binary.'
+          }
+          $text = $text.Replace($old, $new)
+          Set-Content -LiteralPath $path -Value $text -Encoding UTF8
+
+      - name: Make project CI-buildable
+        shell: pwsh
+        run: |
+          $path = 'legacy_src/L4D2VR/l4d2vr.vcxproj'
+          $text = Get-Content -LiteralPath $path -Raw
+          $text = $text.Replace('<PlatformToolset>v142</PlatformToolset>', '<PlatformToolset>v143</PlatformToolset>')
+          $text = [regex]::Replace($text, '<Command>copy /Y &quot;\$\(OutDir\)\$\(TargetName\)\$\(TargetExt\)&quot; &quot;C:\\Program Files \(x86\)\\Steam\\steamapps\\common\\Left 4 Dead 2\\\$\(TargetName\)\$\(TargetExt\)&quot;</Command>', '<Command>echo CI build - post-build copy disabled</Command>')
+          Set-Content -LiteralPath $path -Value $text -Encoding UTF8
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build x86 Release DLL
+        shell: pwsh
+        run: |
+          msbuild legacy_src/l4d2vr.sln /m /p:Configuration=Release /p:Platform=x86 /p:PlatformToolset=v143
+
+      - name: Collect built DLL
+        shell: pwsh
+        run: |
+          $dll = Get-ChildItem -LiteralPath legacy_src -Recurse -Filter d3d9.dll -File |
+            Where-Object { $_.FullName -notmatch '\\dxvk\\' } |
+            Sort-Object Length -Descending |
+            Select-Object -First 1
+          if (-not $dll) { throw 'Built d3d9.dll not found.' }
+          New-Item -ItemType Directory -Force -Path legacy_sd805_v3/payload | Out-Null
+          Copy-Item -LiteralPath $dll.FullName -Destination legacy_sd805_v3/payload/d3d9.dll -Force
+          Get-FileHash legacy_sd805_v3/payload/d3d9.dll -Algorithm SHA256 | ForEach-Object { $_.Hash + '  payload/d3d9.dll' } | Set-Content legacy_sd805_v3/SHA256SUMS.txt
+          Write-Host "Collected: $($dll.FullName) ($($dll.Length) bytes)"
+
+      - name: Package legacy patch
+        shell: pwsh
+        run: |
+          if (Test-Path L4D2VR_Y_Vocalizer_sd805_v3.0.zip) { Remove-Item L4D2VR_Y_Vocalizer_sd805_v3.0.zip -Force }
+          Compress-Archive -Path legacy_sd805_v3 -DestinationPath L4D2VR_Y_Vocalizer_sd805_v3.0.zip -CompressionLevel Optimal
+
+      - name: Commit built package to branch
+        shell: pwsh
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add legacy_sd805_v3/payload/d3d9.dll legacy_sd805_v3/SHA256SUMS.txt L4D2VR_Y_Vocalizer_sd805_v3.0.zip
+          git commit -m "Build legacy sd805 v3 package [skip ci]"
+          git push origin HEAD:legacy-sd805-y-release-fix
