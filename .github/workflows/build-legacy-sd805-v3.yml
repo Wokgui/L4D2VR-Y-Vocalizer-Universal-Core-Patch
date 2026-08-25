@@ -33,7 +33,16 @@ jobs:
           $path = 'legacy_src/L4D2VR/vr.cpp'
           $text = Get-Content -LiteralPath $path -Raw
           $pattern = '(?ms)^    if \(PressedDigitalAction\(m_Pause, true\)\)\s*\{\s*m_Game->ClientCmd_Unrestricted\("gameui_activate"\);\s*RepositionOverlays\(\);\s*\}'
-          $replacement = "    if (PressedDigitalAction(m_Pause))`r`n    {`r`n        m_Game->ClientCmd_Unrestricted(\"+mouse_menu Orders\");`r`n    }`r`n    else`r`n    {`r`n        m_Game->ClientCmd_Unrestricted(\"-mouse_menu Orders\");`r`n    }"
+          $replacement = @(
+            '    if (PressedDigitalAction(m_Pause))',
+            '    {',
+            '        m_Game->ClientCmd_Unrestricted("+mouse_menu Orders");',
+            '    }',
+            '    else',
+            '    {',
+            '        m_Game->ClientCmd_Unrestricted("-mouse_menu Orders");',
+            '    }'
+          ) -join "`r`n"
           $patched = [regex]::Replace($text, $pattern, $replacement, 1)
           if ($patched -eq $text) { throw 'Expected sd805 Pause block not found; refusing to build an unverified binary.' }
           Set-Content -LiteralPath $path -Value $patched -Encoding UTF8
