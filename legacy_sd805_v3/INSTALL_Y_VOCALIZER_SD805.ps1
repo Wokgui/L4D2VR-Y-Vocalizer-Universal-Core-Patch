@@ -49,7 +49,7 @@ function Find-L4D2([string]$Requested) {
 }
 
 Write-Host ""
-Write-Host "L4D2VR sd805 - Y Vocalizer + sans recentrage v3.2" -ForegroundColor White
+Write-Host "L4D2VR sd805 - Y Vocalizer + sans recentrage v3.3" -ForegroundColor White
 Write-Host "Y press = open Orders / Y release = close Orders" -ForegroundColor DarkGray
 Write-Host ""
 
@@ -74,7 +74,7 @@ foreach ($required in @($manifestPath,$bindingsPath,$currentDll,$payloadDll,$pay
 }
 
 $payloadBindingsText = Get-Content -LiteralPath $payloadBindings -Raw
-if ($payloadBindingsText -notmatch [regex]::Escape('/actions/main/in/OrdersMenu') -or
+if ($payloadBindingsText -notmatch [regex]::Escape('/actions/orders/in/Hold') -or
     $payloadBindingsText -match [regex]::Escape('/actions/main/in/ResetPosition')) {
     throw "Le binding du paquet n'est pas la version fusionnee Y + sans recentrage. Aucun fichier n'a ete modifie."
 }

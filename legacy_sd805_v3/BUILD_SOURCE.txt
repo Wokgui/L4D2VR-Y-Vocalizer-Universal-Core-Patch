@@ -3,10 +3,10 @@ Build: Release x86, MSVC v143.
 MinHook source: TsudaKageyu/minhook commit 9fbd087432700d73fc571118d6a9697a36443d88, rebuilt as Release Win32 with v143.
 
 Narrow input change:
-- Oculus Touch / Quest Y -> dedicated /actions/main/in/OrdersMenu action.
+- Oculus Touch / Quest Y -> dedicated /actions/orders/in/Hold action and action set.
+- Orders action set is restricted to /user/hand/left and uses the highest legal overlay priority.
 - Rising edge -> +mouse_menu Orders.
 - Falling edge -> native parameterless -mouse_menu command.
-- Physical Oculus Touch Y state is used as a release fallback while the radial menu captures SteamVR actions.
-- Inactive and error SteamVR frames are ignored; active bState recovers a missed transition.
+- Active bState from the dedicated high-priority set controls both press and release.
 - Oculus Touch left joystick click -> ResetPosition is removed; joystick position -> Walk is preserved.
 - Pause and non-Oculus controller profiles are unchanged.
