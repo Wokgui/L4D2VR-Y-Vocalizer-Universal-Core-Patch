@@ -28,6 +28,16 @@ diff --git a/L4D2VR/SteamVRActionManifest/bindings_oculus_touch.json b/L4D2VR/St
 index ca68418..2048949 100644
 --- a/L4D2VR/SteamVRActionManifest/bindings_oculus_touch.json
 +++ b/L4D2VR/SteamVRActionManifest/bindings_oculus_touch.json
+@@ -40,9 +40,6 @@
+          "sources" : [
+             {
+                "inputs" : {
+-                  "click" : {
+-                     "output" : "/actions/main/in/ResetPosition"
+-                  },
+                   "position" : {
+                      "output" : "/actions/main/in/Walk"
+                   }
 @@ -189,7 +189,7 @@
  			{
                 "inputs" : {
@@ -58,7 +68,7 @@ index bb53309..9a28f0f 100644
  }
  
  void VR::CreateVRTextures()
-@@ -401,6 +404,43 @@ bool VR::PressedDigitalAction(vr::VRActionHandle_t &actionHandle, bool checkIfAc
+@@ -401,6 +404,79 @@ bool VR::PressedDigitalAction(vr::VRActionHandle_t &actionHandle, bool checkIfAc
      return false;
  }
  
@@ -70,6 +80,22 @@ index bb53309..9a28f0f 100644
 +        {
 +            m_Game->ClientCmd_Unrestricted("-mouse_menu Orders");
 +            m_OrdersMenuOpen = false;
++            m_OrdersMenuRawTracking = false;
++        }
++        return;
++    }
++
++    // The radial overlay can capture the SteamVR action before its falling
++    // edge reaches us. On Oculus Touch, Y is also exposed through the legacy
++    // ApplicationMenu bit, so use that physical state while the menu is open.
++    if (m_OrdersMenuOpen && m_OrdersMenuRawTracking)
++    {
++        bool yPressed = true;
++        if (GetOculusTouchYState(yPressed) && !yPressed)
++        {
++            m_Game->ClientCmd_Unrestricted("-mouse_menu Orders");
++            m_OrdersMenuOpen = false;
++            m_OrdersMenuRawTracking = false;
 +        }
 +        return;
 +    }
@@ -81,14 +107,16 @@ index bb53309..9a28f0f 100644
 +        sizeof(actionData),
 +        vr::k_ulInvalidInputValueHandle);
 +
-+    // SteamVR can temporarily make an action unavailable while an overlay is
-+    // handling input. That is not a physical button release, so keep the menu
-+    // state unchanged until an active press/release transition is reported.
-+    if (result != vr::VRInputError_None || !actionData.bActive || !actionData.bChanged)
++    // An inactive action is not a physical release. When active, bState is the
++    // source of truth even if SteamVR lost bChanged during a map transition or
++    // while the radial overlay was interactive.
++    if (result != vr::VRInputError_None || !actionData.bActive)
 +        return;
 +
 +    if (actionData.bState && !m_OrdersMenuOpen)
 +    {
++        bool yPressed = false;
++        m_OrdersMenuRawTracking = GetOculusTouchYState(yPressed) && yPressed;
 +        m_Game->ClientCmd_Unrestricted("+mouse_menu Orders");
 +        m_OrdersMenuOpen = true;
 +    }
@@ -96,7 +124,25 @@ index bb53309..9a28f0f 100644
 +    {
 +        m_Game->ClientCmd_Unrestricted("-mouse_menu Orders");
 +        m_OrdersMenuOpen = false;
++        m_OrdersMenuRawTracking = false;
 +    }
++}
++
++bool VR::GetOculusTouchYState(bool &stateOut)
++{
++    const vr::TrackedDeviceIndex_t leftControllerIndex =
++        m_System->GetTrackedDeviceIndexForControllerRole(vr::TrackedControllerRole_LeftHand);
++
++    if (leftControllerIndex == vr::k_unTrackedDeviceIndexInvalid)
++        return false;
++
++    vr::VRControllerState_t controllerState = {};
++    if (!m_System->GetControllerState(leftControllerIndex, &controllerState, sizeof(controllerState)))
++        return false;
++
++    stateOut = (controllerState.ulButtonPressed &
++                vr::ButtonMaskFromId(vr::k_EButton_ApplicationMenu)) != 0;
++    return true;
 +}
 +
  bool VR::GetAnalogActionData(vr::VRActionHandle_t &actionHandle, vr::InputAnalogActionData_t &analogDataOut)
@@ -114,19 +160,21 @@ index 11c8fea..1340dab 100644
  
  	TrackedDevicePoseData m_HmdPose;
  	TrackedDevicePoseData m_LeftControllerPose;
-@@ -182,6 +183,7 @@ public:
+@@ -182,6 +183,8 @@ public:
  	float m_HudDistance = 1.3;
  	float m_HudSize = 1.1;
  	bool m_HudAlwaysVisible = false;
 +	bool m_OrdersMenuOpen = false;
++	bool m_OrdersMenuRawTracking = false;
  
  	VR() {};
  	VR(Game *game);
-@@ -196,6 +198,7 @@ public:
+@@ -196,6 +199,8 @@ public:
  	void GetViewParameters();
  	void ProcessMenuInput();
  	void ProcessInput();
 +	void ProcessOrdersMenuInput();
++	bool GetOculusTouchYState(bool &stateOut);
  	VMatrix VMatrixFromHmdMatrix(const vr::HmdMatrix34_t &hmdMat);
  	vr::HmdMatrix34_t VMatrixToHmdMatrix(const VMatrix &vMat);
  	vr::HmdMatrix34_t GetControllerTipMatrix(vr::ETrackedControllerRole controllerRole);

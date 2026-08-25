@@ -6,5 +6,7 @@ Narrow input change:
 - Oculus Touch / Quest Y -> dedicated /actions/main/in/OrdersMenu action.
 - Rising edge -> +mouse_menu Orders.
 - Falling edge -> -mouse_menu Orders.
-- Inactive, error and unchanged SteamVR frames are ignored.
+- Physical Oculus Touch Y state is used as a release fallback while the radial menu captures SteamVR actions.
+- Inactive and error SteamVR frames are ignored; active bState recovers a missed transition.
+- Oculus Touch left joystick click -> ResetPosition is removed; joystick position -> Walk is preserved.
 - Pause and non-Oculus controller profiles are unchanged.

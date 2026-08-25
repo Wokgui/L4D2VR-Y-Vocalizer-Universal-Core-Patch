@@ -1,4 +1,4 @@
-name: Build legacy sd805 Y release fix
+name: Build legacy sd805 combined Y and no-recenter fix
 
 on:
   push:
@@ -27,7 +27,7 @@ jobs:
           git checkout 628820257ae755ae120b8f86740a145b6fb74f51
           git submodule update --init --recursive
 
-      - name: Apply the narrow Quest Y Orders patch
+      - name: Apply the combined Quest Y and no-recenter patch
         shell: pwsh
         run: |
           git -C legacy_src apply --check ../legacy_sd805_v3/L4D2VR-Y-Orders-Quest3.patch
@@ -86,7 +86,10 @@ jobs:
             if (-not $ascii.Contains($required)) { throw "Required patch string missing from DLL: $required" }
           }
           Get-Content -LiteralPath legacy_src/L4D2VR/SteamVRActionManifest/action_manifest.json -Raw | ConvertFrom-Json | Out-Null
-          Get-Content -LiteralPath legacy_src/L4D2VR/SteamVRActionManifest/bindings_oculus_touch.json -Raw | ConvertFrom-Json | Out-Null
+          $binding = Get-Content -LiteralPath legacy_src/L4D2VR/SteamVRActionManifest/bindings_oculus_touch.json -Raw
+          $binding | ConvertFrom-Json | Out-Null
+          if ($binding -notmatch [regex]::Escape('/actions/main/in/OrdersMenu')) { throw 'Oculus Y OrdersMenu binding missing.' }
+          if ($binding -match [regex]::Escape('/actions/main/in/ResetPosition')) { throw 'Left-stick ResetPosition binding is still present.' }
           New-Item -ItemType Directory -Force -Path legacy_sd805_v3/payload/VR/SteamVRActionManifest | Out-Null
           Copy-Item -LiteralPath $dll.FullName -Destination legacy_sd805_v3/payload/d3d9.dll -Force
           Copy-Item -LiteralPath legacy_src/L4D2VR/SteamVRActionManifest/action_manifest.json -Destination legacy_sd805_v3/payload/VR/SteamVRActionManifest/action_manifest.json -Force
@@ -104,15 +107,15 @@ jobs:
       - name: Package legacy patch
         shell: pwsh
         run: |
-          if (Test-Path L4D2VR_Y_Vocalizer_sd805_v3.0.zip) { Remove-Item L4D2VR_Y_Vocalizer_sd805_v3.0.zip -Force }
-          Compress-Archive -Path legacy_sd805_v3 -DestinationPath L4D2VR_Y_Vocalizer_sd805_v3.0.zip -CompressionLevel Optimal
+          if (Test-Path L4D2VR_Y_Vocalizer_NoRecenter_sd805_v3.1.zip) { Remove-Item L4D2VR_Y_Vocalizer_NoRecenter_sd805_v3.1.zip -Force }
+          Compress-Archive -Path legacy_sd805_v3 -DestinationPath L4D2VR_Y_Vocalizer_NoRecenter_sd805_v3.1.zip -CompressionLevel Optimal
 
       - name: Commit built package to branch
         shell: pwsh
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add legacy_sd805_v3/payload legacy_sd805_v3/SHA256SUMS.txt L4D2VR_Y_Vocalizer_sd805_v3.0.zip
+          git add legacy_sd805_v3/payload legacy_sd805_v3/SHA256SUMS.txt L4D2VR_Y_Vocalizer_NoRecenter_sd805_v3.1.zip
           if (git diff --cached --quiet) {
             Write-Host 'The verified package is already current.'
             exit 0
