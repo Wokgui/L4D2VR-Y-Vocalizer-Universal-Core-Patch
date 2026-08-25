@@ -1,0 +1,24 @@
+L4D2VR sd805 - Y VOCALIZER v3.0
+================================
+
+Cette version est faite pour l'ancien L4D2VR sd805 v0.6.2 / commit 628820257ae755ae120b8f86740a145b6fb74f51.
+Elle n'utilise PAS les CustomAction des versions keyou91 recentes.
+
+Fonctionnement :
+- appui sur Y : +mouse_menu Orders ;
+- Y maintenu : le vocalizer reste ouvert ;
+- relachement de Y : -mouse_menu Orders, donc fermeture immediate.
+
+Installation :
+1. Fermer Left 4 Dead 2 et SteamVR.
+2. Lancer INSTALL_Y_VOCALIZER_SD805.bat.
+3. Redemarrer SteamVR.
+4. Lancer L4D2VR.
+
+Le programme sauvegarde le d3d9.dll present avant installation dans :
+VR\Wokgui_Y_Vocalizer_Backup_sd805_v3
+
+Desinstallation :
+Fermer le jeu et SteamVR puis lancer UNINSTALL_Y_VOCALIZER_SD805.bat.
+
+Le patch ne remplace pas radialmenu.txt et conserve le contenu de ton vocalizer Orders.
