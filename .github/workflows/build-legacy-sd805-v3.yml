@@ -1,0 +1,125 @@
+name: Build legacy sd805 combined Y and no-recenter fix
+
+on:
+  push:
+    branches:
+      - legacy-sd805-y-release-fix
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout patch repository
+        uses: actions/checkout@v4
+        with:
+          ref: legacy-sd805-y-release-fix
+
+      - name: Clone exact sd805 L4D2VR source
+        shell: pwsh
+        run: |
+          git clone https://github.com/sd805/l4d2vr.git legacy_src
+          Set-Location legacy_src
+          git checkout 628820257ae755ae120b8f86740a145b6fb74f51
+          git submodule update --init --recursive
+
+      - name: Apply the combined Quest Y and no-recenter patch
+        shell: pwsh
+        run: |
+          git -C legacy_src apply --check ../legacy_sd805_v3/L4D2VR-Y-Orders-Quest3.patch
+          git -C legacy_src apply ../legacy_sd805_v3/L4D2VR-Y-Orders-Quest3.patch
+
+      - name: Make project CI-buildable
+        shell: pwsh
+        run: |
+          $path = 'legacy_src/L4D2VR/l4d2vr.vcxproj'
+          $text = Get-Content -LiteralPath $path -Raw
+          $text = $text.Replace('<PlatformToolset>v142</PlatformToolset>', '<PlatformToolset>v143</PlatformToolset>')
+          $updated = [regex]::Replace($text, '<Command>copy /Y "[^"]+" "[^"]+"</Command>', '<Command>echo CI build - post-build copy disabled</Command>')
+          if ($updated -eq $text) { throw 'Expected Steam post-build copy command not found.' }
+          $text = $updated
+          Set-Content -LiteralPath $path -Value $text -Encoding UTF8
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Rebuild MinHook with the runner compiler
+        shell: pwsh
+        run: |
+          $buildPath = (Get-ChildItem Env: | Where-Object { $_.Name -ieq 'Path' } | Select-Object -First 1 -ExpandProperty Value)
+          Remove-Item Env:Path -ErrorAction SilentlyContinue
+          Remove-Item Env:PATH -ErrorAction SilentlyContinue
+          $env:PATH = $buildPath
+          git clone https://github.com/TsudaKageyu/minhook.git minhook_src
+          Set-Location minhook_src
+          git checkout 9fbd087432700d73fc571118d6a9697a36443d88
+          Set-Location ..
+          msbuild minhook_src/build/VC15/libMinHook.vcxproj /m /t:Rebuild /p:Configuration=Release /p:Platform=Win32 /p:PlatformToolset=v143
+          $rebuilt = 'minhook_src/build/VC15/lib/Release/libMinHook.x86.lib'
+          if (-not (Test-Path -LiteralPath $rebuilt)) { throw 'Rebuilt MinHook x86 library not found.' }
+          Copy-Item -LiteralPath $rebuilt -Destination 'legacy_src/thirdparty/minhook/lib/Release/libMinHook.x86.lib' -Force
+
+      - name: Build x86 Release DLL
+        shell: pwsh
+        run: |
+          $buildPath = (Get-ChildItem Env: | Where-Object { $_.Name -ieq 'Path' } | Select-Object -First 1 -ExpandProperty Value)
+          Remove-Item Env:Path -ErrorAction SilentlyContinue
+          Remove-Item Env:PATH -ErrorAction SilentlyContinue
+          $env:PATH = $buildPath
+          msbuild legacy_src/l4d2vr.sln /m /p:Configuration=Release /p:Platform=x86 /p:PlatformToolset=v143
+
+      - name: Collect and verify the patched payload
+        shell: pwsh
+        run: |
+          $dll = Get-ChildItem -LiteralPath legacy_src -Recurse -Filter d3d9.dll -File | Where-Object { $_.FullName -notmatch '\\dxvk\\' } | Sort-Object Length -Descending | Select-Object -First 1
+          if (-not $dll) { throw 'Built d3d9.dll not found.' }
+          $bytes = [System.IO.File]::ReadAllBytes($dll.FullName)
+          $peOffset = [BitConverter]::ToInt32($bytes, 0x3c)
+          $machine = [BitConverter]::ToUInt16($bytes, $peOffset + 4)
+          if ($machine -ne 0x014c) { throw ('Expected PE x86 machine 0x014c, got 0x{0:x4}.' -f $machine) }
+          $ascii = [Text.Encoding]::ASCII.GetString($bytes)
+          foreach ($required in @('+mouse_menu Orders', '-mouse_menu', '/actions/orders/in/Hold')) {
+            if (-not $ascii.Contains($required)) { throw "Required patch string missing from DLL: $required" }
+          }
+          if ($ascii.Contains('-mouse_menu Orders')) { throw 'Incorrect release command remains in DLL.' }
+          Get-Content -LiteralPath legacy_src/L4D2VR/SteamVRActionManifest/action_manifest.json -Raw | ConvertFrom-Json | Out-Null
+          $binding = Get-Content -LiteralPath legacy_src/L4D2VR/SteamVRActionManifest/bindings_oculus_touch.json -Raw
+          $binding | ConvertFrom-Json | Out-Null
+          if ($binding -notmatch [regex]::Escape('/actions/orders/in/Hold')) { throw 'Dedicated Oculus Y hold binding missing.' }
+          if ($binding -match [regex]::Escape('/actions/main/in/ResetPosition')) { throw 'Left-stick ResetPosition binding is still present.' }
+          New-Item -ItemType Directory -Force -Path legacy_sd805_v3/payload/VR/SteamVRActionManifest | Out-Null
+          Copy-Item -LiteralPath $dll.FullName -Destination legacy_sd805_v3/payload/d3d9.dll -Force
+          Copy-Item -LiteralPath legacy_src/L4D2VR/SteamVRActionManifest/action_manifest.json -Destination legacy_sd805_v3/payload/VR/SteamVRActionManifest/action_manifest.json -Force
+          Copy-Item -LiteralPath legacy_src/L4D2VR/SteamVRActionManifest/bindings_oculus_touch.json -Destination legacy_sd805_v3/payload/VR/SteamVRActionManifest/bindings_oculus_touch.json -Force
+          @(
+            'payload/d3d9.dll',
+            'payload/VR/SteamVRActionManifest/action_manifest.json',
+            'payload/VR/SteamVRActionManifest/bindings_oculus_touch.json'
+          ) | ForEach-Object {
+            $hash = (Get-FileHash -LiteralPath (Join-Path legacy_sd805_v3 $_) -Algorithm SHA256).Hash
+            "$hash  $_"
+          } | Set-Content legacy_sd805_v3/SHA256SUMS.txt
+          Write-Host "Collected: $($dll.FullName) ($($dll.Length) bytes)"
+
+      - name: Package legacy patch
+        shell: pwsh
+        run: |
+          if (Test-Path L4D2VR_Y_Vocalizer_NoRecenter_sd805_v3.3.zip) { Remove-Item L4D2VR_Y_Vocalizer_NoRecenter_sd805_v3.3.zip -Force }
+          Compress-Archive -Path legacy_sd805_v3 -DestinationPath L4D2VR_Y_Vocalizer_NoRecenter_sd805_v3.3.zip -CompressionLevel Optimal
+
+      - name: Commit built package to branch
+        shell: pwsh
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add legacy_sd805_v3/payload legacy_sd805_v3/SHA256SUMS.txt L4D2VR_Y_Vocalizer_NoRecenter_sd805_v3.3.zip
+          if (git diff --cached --quiet) {
+            Write-Host 'The verified package is already current.'
+            exit 0
+          }
+          git commit -m "Build legacy sd805 v3 package [skip ci]"
+          git push origin HEAD:legacy-sd805-y-release-fix
