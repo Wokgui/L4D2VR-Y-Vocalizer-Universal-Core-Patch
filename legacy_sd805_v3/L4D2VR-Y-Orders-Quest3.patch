@@ -1,5 +1,5 @@
 diff --git a/L4D2VR/SteamVRActionManifest/action_manifest.json b/L4D2VR/SteamVRActionManifest/action_manifest.json
-index 3b3b5d5..2474f2a 100644
+index 3b3b5d5..edf3a79 100644
 --- a/L4D2VR/SteamVRActionManifest/action_manifest.json
 +++ b/L4D2VR/SteamVRActionManifest/action_manifest.json
 @@ -134,6 +134,11 @@
@@ -8,56 +8,27 @@ index 3b3b5d5..2474f2a 100644
  			"type": "boolean"
 +		},
 +		{
-+			"name": "/actions/orders/in/Hold",
++			"name": "/actions/main/in/OrdersMenu",
 +			"type": "boolean",
 +			"requirement": "optional"
  		}
  	],
  
-@@ -145,6 +150,10 @@
- 		{
- 		  "name": "/actions/base",
- 		  "usage": "hidden"
-+		},
-+		{
-+		  "name": "/actions/orders",
-+		  "usage": "hidden"
- 		}
- 	],
- 
-@@ -174,7 +183,9 @@
+@@ -174,7 +179,8 @@
  			"/actions/main/in/Spray" : "Spray",
  			"/actions/main/in/Scoreboard" : "Show Scoreboard",
  			"/actions/main/in/ShowHUD" : "Show HUD",
 -			"/actions/main/in/Pause" : "Pause"
 +			"/actions/main/in/Pause" : "Pause",
-+			"/actions/orders" : "Orders Hold",
-+			"/actions/orders/in/Hold" : "Orders Hold"
++			"/actions/main/in/OrdersMenu" : "Orders Menu"
  		}
  	]
  }
 diff --git a/L4D2VR/SteamVRActionManifest/bindings_oculus_touch.json b/L4D2VR/SteamVRActionManifest/bindings_oculus_touch.json
-index ca68418..98b68ba 100644
+index ca68418..2048949 100644
 --- a/L4D2VR/SteamVRActionManifest/bindings_oculus_touch.json
 +++ b/L4D2VR/SteamVRActionManifest/bindings_oculus_touch.json
-@@ -36,13 +36,23 @@
-          ],
-          "sources" : []
-       },
-+      "/actions/orders" : {
-+         "sources" : [
-+			{
-+               "inputs" : {
-+                  "click" : {
-+                     "output" : "/actions/orders/in/Hold"
-+                  }
-+               },
-+               "mode" : "button",
-+               "path" : "/user/hand/left/input/y"
-+            }
-+         ]
-+      },
-       "/actions/main" : {
+@@ -40,9 +40,6 @@
           "sources" : [
              {
                 "inputs" : {
@@ -67,45 +38,28 @@ index ca68418..98b68ba 100644
                    "position" : {
                       "output" : "/actions/main/in/Walk"
                    }
-@@ -185,15 +195,6 @@
+@@ -189,7 +189,7 @@
+ 			{
+                "inputs" : {
+                   "click" : {
+-                     "output" : "/actions/main/in/Pause"
++                     "output" : "/actions/main/in/OrdersMenu"
+                   }
                 },
                 "mode" : "button",
-                "path" : "/user/hand/left/input/x"
--            },
--			{
--               "inputs" : {
--                  "click" : {
--                     "output" : "/actions/main/in/Pause"
--                  }
--               },
--               "mode" : "button",
--               "path" : "/user/hand/left/input/y"
-             },
-             {
-                "inputs" : {
 diff --git a/L4D2VR/vr.cpp b/L4D2VR/vr.cpp
-index bb53309..c8b39ab 100644
+index bb53309..9a28f0f 100644
 --- a/L4D2VR/vr.cpp
 +++ b/L4D2VR/vr.cpp
-@@ -135,10 +135,17 @@ int VR::SetActionManifest(const char *fileName)
+@@ -135,6 +135,7 @@ int VR::SetActionManifest(const char *fileName)
      m_Input->GetActionHandle("/actions/main/in/Scoreboard", &m_Scoreboard);
      m_Input->GetActionHandle("/actions/main/in/ShowHUD", &m_ShowHUD);
      m_Input->GetActionHandle("/actions/main/in/Pause", &m_Pause);
-+    m_Input->GetActionHandle("/actions/orders/in/Hold", &m_OrdersMenu);
++    m_Input->GetActionHandle("/actions/main/in/OrdersMenu", &m_OrdersMenu);
  
      m_Input->GetActionSetHandle("/actions/main", &m_ActionSet);
-+    m_Input->GetActionSetHandle("/actions/orders", &m_OrdersActionSet);
-+    m_Input->GetInputSourceHandle("/user/hand/left", &m_LeftHandInputSource);
      m_ActiveActionSet = {};
-     m_ActiveActionSet.ulActionSet = m_ActionSet;
-+    m_ActiveOrdersActionSet = {};
-+    m_ActiveOrdersActionSet.ulActionSet = m_OrdersActionSet;
-+    m_ActiveOrdersActionSet.ulRestrictedToDevice = m_LeftHandInputSource;
-+    m_ActiveOrdersActionSet.nPriority = vr::k_nActionSetOverlayGlobalPriorityMax;
- 
-     return 0;
- }
-@@ -178,6 +185,8 @@ void VR::Update()
+@@ -178,6 +179,8 @@ void VR::Update()
          ProcessMenuInput();
      else
          ProcessInput();
@@ -114,17 +68,7 @@ index bb53309..c8b39ab 100644
  }
  
  void VR::CreateVRTextures()
-@@ -369,7 +378,8 @@ void VR::GetPoses()
- void VR::UpdatePosesAndActions() 
- {
-     vr::VRCompositor()->WaitGetPoses(m_Poses, vr::k_unMaxTrackedDeviceCount, NULL, 0);
--    m_Input->UpdateActionState(&m_ActiveActionSet, sizeof(vr::VRActiveActionSet_t), 1);
-+    vr::VRActiveActionSet_t activeActionSets[2] = {m_ActiveActionSet, m_ActiveOrdersActionSet};
-+    m_Input->UpdateActionState(activeActionSets, sizeof(vr::VRActiveActionSet_t), 2);
- }
- 
- void VR::GetViewParameters() 
-@@ -401,6 +411,40 @@ bool VR::PressedDigitalAction(vr::VRActionHandle_t &actionHandle, bool checkIfAc
+@@ -401,6 +404,79 @@ bool VR::PressedDigitalAction(vr::VRActionHandle_t &actionHandle, bool checkIfAc
      return false;
  }
  
@@ -136,8 +80,24 @@ index bb53309..c8b39ab 100644
 +        {
 +            m_Game->ClientCmd_Unrestricted("-mouse_menu");
 +            m_OrdersMenuOpen = false;
++            m_OrdersMenuRawTracking = false;
 +        }
 +        return;
++    }
++
++    // The radial overlay can capture the SteamVR action before its falling
++    // edge reaches us. On Oculus Touch, Y is also exposed through the legacy
++    // ApplicationMenu bit, so use that physical state while the menu is open.
++    if (m_OrdersMenuOpen && m_OrdersMenuRawTracking)
++    {
++        bool yPressed = true;
++        if (GetOculusTouchYState(yPressed) && !yPressed)
++        {
++            m_Game->ClientCmd_Unrestricted("-mouse_menu");
++            m_OrdersMenuOpen = false;
++            m_OrdersMenuRawTracking = false;
++            return;
++        }
 +    }
 +
 +    vr::InputDigitalActionData_t actionData = {};
@@ -145,13 +105,18 @@ index bb53309..c8b39ab 100644
 +        m_OrdersMenu,
 +        &actionData,
 +        sizeof(actionData),
-+        m_LeftHandInputSource);
++        vr::k_ulInvalidInputValueHandle);
 +
++    // An inactive action is not a physical release. When active, bState is the
++    // source of truth even if SteamVR lost bChanged during a map transition or
++    // while the radial overlay was interactive.
 +    if (result != vr::VRInputError_None || !actionData.bActive)
 +        return;
 +
 +    if (actionData.bState && !m_OrdersMenuOpen)
 +    {
++        bool yPressed = false;
++        m_OrdersMenuRawTracking = GetOculusTouchYState(yPressed) && yPressed;
 +        m_Game->ClientCmd_Unrestricted("+mouse_menu Orders");
 +        m_OrdersMenuOpen = true;
 +    }
@@ -159,27 +124,35 @@ index bb53309..c8b39ab 100644
 +    {
 +        m_Game->ClientCmd_Unrestricted("-mouse_menu");
 +        m_OrdersMenuOpen = false;
++        m_OrdersMenuRawTracking = false;
 +    }
++}
++
++bool VR::GetOculusTouchYState(bool &stateOut)
++{
++    const vr::TrackedDeviceIndex_t leftControllerIndex =
++        m_System->GetTrackedDeviceIndexForControllerRole(vr::TrackedControllerRole_LeftHand);
++
++    if (leftControllerIndex == vr::k_unTrackedDeviceIndexInvalid)
++        return false;
++
++    vr::VRControllerState_t controllerState = {};
++    if (!m_System->GetControllerState(leftControllerIndex, &controllerState, sizeof(controllerState)))
++        return false;
++
++    stateOut = (controllerState.ulButtonPressed &
++                vr::ButtonMaskFromId(vr::k_EButton_ApplicationMenu)) != 0;
++    return true;
 +}
 +
  bool VR::GetAnalogActionData(vr::VRActionHandle_t &actionHandle, vr::InputAnalogActionData_t &analogDataOut)
  {
      vr::EVRInputError result = m_Input->GetAnalogActionData(actionHandle, &analogDataOut, sizeof(analogDataOut), vr::k_ulInvalidInputValueHandle);
 diff --git a/L4D2VR/vr.h b/L4D2VR/vr.h
-index 11c8fea..54704bc 100644
+index 11c8fea..1340dab 100644
 --- a/L4D2VR/vr.h
 +++ b/L4D2VR/vr.h
-@@ -139,6 +139,9 @@ public:
- 	// action set
- 	vr::VRActionSetHandle_t m_ActionSet;
- 	vr::VRActiveActionSet_t m_ActiveActionSet;
-+	vr::VRActionSetHandle_t m_OrdersActionSet;
-+	vr::VRActiveActionSet_t m_ActiveOrdersActionSet;
-+	vr::VRInputValueHandle_t m_LeftHandInputSource;
- 
- 	// actions
- 	vr::VRActionHandle_t m_ActionJump;
-@@ -164,6 +167,7 @@ public:
+@@ -164,6 +164,7 @@ public:
  	vr::VRActionHandle_t m_Scoreboard;
  	vr::VRActionHandle_t m_ShowHUD;
  	vr::VRActionHandle_t m_Pause;
@@ -187,20 +160,21 @@ index 11c8fea..54704bc 100644
  
  	TrackedDevicePoseData m_HmdPose;
  	TrackedDevicePoseData m_LeftControllerPose;
-@@ -182,6 +186,7 @@ public:
+@@ -182,6 +183,8 @@ public:
  	float m_HudDistance = 1.3;
  	float m_HudSize = 1.1;
  	bool m_HudAlwaysVisible = false;
 +	bool m_OrdersMenuOpen = false;
++	bool m_OrdersMenuRawTracking = false;
  
  	VR() {};
  	VR(Game *game);
-@@ -196,6 +201,7 @@ public:
+@@ -196,6 +199,8 @@ public:
  	void GetViewParameters();
  	void ProcessMenuInput();
  	void ProcessInput();
 +	void ProcessOrdersMenuInput();
++	bool GetOculusTouchYState(bool &stateOut);
  	VMatrix VMatrixFromHmdMatrix(const vr::HmdMatrix34_t &hmdMat);
  	vr::HmdMatrix34_t VMatrixToHmdMatrix(const VMatrix &vMat);
  	vr::HmdMatrix34_t GetControllerTipMatrix(vr::ETrackedControllerRole controllerRole);
-
