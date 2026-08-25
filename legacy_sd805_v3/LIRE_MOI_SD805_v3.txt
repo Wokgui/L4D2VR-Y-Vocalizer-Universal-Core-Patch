@@ -1,25 +1,24 @@
-L4D2VR sd805 - Y VOCALIZER + SANS RECENTRAGE v3.3
+L4D2VR sd805 - Y VOCALIZER + SANS RECENTRAGE v3.4
 ===================================================
 
 Cette version est faite pour l'ancien L4D2VR sd805 v0.6.2, commit
 628820257ae755ae120b8f86740a145b6fb74f51.
-Elle n'utilise pas les CustomAction des versions keyou91 recentes.
 
-Fonctionnement :
-- appui sur Y : +mouse_menu Orders est envoye une seule fois ;
-- Y maintenu : le vocalizer reste ouvert sans repeter la commande ;
-- relachement de Y : la commande native -mouse_menu, sans argument, est envoyee une seule fois ;
-- si le menu radial masque le relachement SteamVR, l'etat physique de Y ferme quand meme le menu ;
-- Y utilise un ensemble d'actions SteamVR dedie, limite a la main gauche et
-  prioritaire pendant l'interaction du radial ;
-- clic du stick gauche : aucun recentrage ; le mouvement du stick reste normal.
+Fonctionnement voulu :
+- appui sur Y : le vocalizer Orders s'ouvre ;
+- Y maintenu : le vocalizer reste ouvert ;
+- controleur droit : selection dans le vocalizer comme dans la configuration fonctionnelle precedente ;
+- relachement de Y : le vocalizer se ferme immediatement ;
+- clic du stick gauche : aucun recentrage ;
+- axe du stick gauche : mouvement conserve normalement.
 
-Portee du patch :
-- un ensemble SteamVR /actions/orders separe est ajoute ;
-- seul Y dans le profil Oculus Touch / Quest est lie a /actions/orders/in/Hold ;
-- le clic ResetPosition est retire uniquement du joystick gauche Oculus Touch ;
-- Pause, Knuckles, Vive Cosmos, axes des sticks, gachettes, armes et bras VR restent inchanges ;
-- radialmenu.txt et le contenu du vocalizer Orders ne sont pas remplaces.
+Correction v3.4 :
+- suppression du nouvel action set SteamVR haute priorite de la v3.3, qui pouvait monopoliser la main gauche ;
+- Y revient dans l'action set principal via /actions/main/in/OrdersMenu ;
+- le relachement de Y est surveille meme quand le menu radial est affiche ;
+- si SteamVR masque le relachement, l'etat physique Oculus Touch de Y sert de secours ;
+- seul le binding ResetPosition du clic du stick gauche est retire ; le binding Walk du meme stick est conserve ;
+- aucun binding du controleur droit n'est remplace par ce patch.
 
 Installation :
 1. Fermer Left 4 Dead 2 et SteamVR.
@@ -35,4 +34,4 @@ Desinstallation :
 Fermer le jeu et SteamVR puis lancer UNINSTALL_Y_VOCALIZER_SD805.bat.
 
 Compilation : GitHub Actions, Release x86, MSVC v143. MinHook est reconstruit
-avec le meme compilateur que le DLL pour eviter C1047 / LNK1257.
+avec le meme compilateur que le DLL.
