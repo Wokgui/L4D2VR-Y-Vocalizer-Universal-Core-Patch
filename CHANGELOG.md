@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.0 — Y release closes the vocalizer
+
+- Y now drives the `Orders` mouse menu directly instead of mirroring virtual Ctrl.
+- Pressing Y sends `+mouse_menu Orders`.
+- Releasing Y uses L4D2VR's native press/release CustomAction path and sends `-mouse_menu Orders`.
+- Holding Y keeps the vocalizer open.
+- Releasing Y with no phrase selected closes the menu without intentionally issuing a vocal line.
+- Existing v2 `hold:key:ctrl` slots are detected and reused automatically.
+- Only `VR\config.txt` and the Oculus Touch binding are modified.
+- No `d3d9.dll`, C++ source or `radialmenu.txt` replacement.
+- Adds `current_v3/` with installer, uninstaller and documentation.
+
 ## Height safety fix — Quest / Oculus Touch
 
 Added a one-click safety fix for accidental playspace/height changes while playing L4D2VR with Quest Touch controllers.

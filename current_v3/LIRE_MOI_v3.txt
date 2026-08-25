@@ -1,0 +1,54 @@
+L4D2VR - Y VOCALIZER SHORTCUT v3.0
+====================================
+
+BUT
+---
+Le bouton Y du Quest / Oculus Touch pilote directement le menu vocal Orders :
+
+- appui sur Y : ouvre le vocalizer ;
+- Y maintenu : le vocalizer reste ouvert ;
+- relachement de Y : ferme le vocalizer ;
+- si aucune phrase n'est selectionnee, rien n'est prononce.
+
+CHANGEMENT PAR RAPPORT A v2
+---------------------------
+v2 faisait seulement maintenir la touche clavier Ctrl avec :
+
+hold:key:ctrl
+
+v3 utilise directement le mecanisme press/release natif de L4D2VR :
+
++mouse_menu Orders
+
+Le L4D2VR actuel envoie alors automatiquement :
+
+appui      -> +mouse_menu Orders
+relachement -> -mouse_menu Orders
+
+INSTALLATION
+------------
+1. Fermer Left 4 Dead 2 et SteamVR.
+2. Lancer INSTALL_Y_VOCALIZER_CURRENT.bat.
+3. Redemarrer SteamVR.
+4. Lancer L4D2VR.
+
+Si v2 est deja installe, v3 retrouve et reutilise son CustomAction au lieu d'en prendre un second.
+
+FICHIERS MODIFIES
+-----------------
+VR\config.txt
+VR\SteamVRActionManifest\bindings_oculus_touch.json
+
+Une sauvegarde est creee dans :
+
+VR\Wokgui_Y_Vocalizer_Backup_v3
+
+DESINSTALLATION
+---------------
+Fermer le jeu et SteamVR puis lancer :
+
+UNINSTALL_Y_VOCALIZER_CURRENT.bat
+
+La configuration presente juste avant l'installation de v3 est restauree.
+
+Aucun d3d9.dll, radialmenu.txt ou code C++ n'est remplace.
