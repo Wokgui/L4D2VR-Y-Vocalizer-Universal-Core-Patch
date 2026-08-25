@@ -2,11 +2,14 @@ Base source: sd805/l4d2vr commit 628820257ae755ae120b8f86740a145b6fb74f51.
 Build: Release x86, MSVC v143.
 MinHook source: TsudaKageyu/minhook commit 9fbd087432700d73fc571118d6a9697a36443d88, rebuilt as Release Win32 with v143.
 
-Narrow input change:
-- Oculus Touch / Quest Y -> dedicated /actions/orders/in/Hold action and action set.
-- Orders action set is restricted to /user/hand/left and uses the highest legal overlay priority.
-- Rising edge -> +mouse_menu Orders.
-- Falling edge -> native parameterless -mouse_menu command.
-- Active bState from the dedicated high-priority set controls both press and release.
-- Oculus Touch left joystick click -> ResetPosition is removed; joystick position -> Walk is preserved.
-- Pause and non-Oculus controller profiles are unchanged.
+Corrected v3.4 input change:
+- Oculus Touch / Quest Y -> /actions/main/in/OrdersMenu in the existing main action set.
+- No separate high-priority left-hand action set is used.
+- Y rising edge -> +mouse_menu Orders.
+- Y falling edge -> native parameterless -mouse_menu command.
+- While the radial menu is open, Oculus Touch physical Y state is used as a release fallback if SteamVR misses the falling edge.
+- ProcessOrdersMenuInput runs after normal gameplay/menu input so holding/releasing Y continues to be checked while the radial is visible.
+- Oculus Touch left joystick click -> ResetPosition is removed only; joystick position -> Walk is preserved.
+- Right-controller bindings are not changed, so radial selection remains available through the user's existing right-controller behavior.
+- Pause action exists in the manifest but physical Oculus Touch Y is repurposed for Orders.
+- Non-Oculus controller profiles are unchanged.
