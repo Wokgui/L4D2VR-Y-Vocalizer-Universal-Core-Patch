@@ -36,6 +36,19 @@
          ],
          "sources" : []
       },
+      "/actions/orders" : {
+         "sources" : [
+			{
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/orders/in/Hold"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/y"
+            }
+         ]
+      },
       "/actions/main" : {
          "sources" : [
             {
@@ -182,15 +195,6 @@
                },
                "mode" : "button",
                "path" : "/user/hand/left/input/x"
-            },
-			{
-               "inputs" : {
-                  "click" : {
-                     "output" : "/actions/main/in/OrdersMenu"
-                  }
-               },
-               "mode" : "button",
-               "path" : "/user/hand/left/input/y"
             },
             {
                "inputs" : {
